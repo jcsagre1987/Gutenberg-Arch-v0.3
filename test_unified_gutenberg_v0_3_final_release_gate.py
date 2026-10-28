@@ -58,6 +58,7 @@ DEFAULT_MODELS_DIR = PROJECT_ROOT / "Models"
 DEFAULT_V3_BASE = DEFAULT_MODELS_DIR / "unified_gutenberg_ssd_base_v0_3.pt"
 EXPECTED_V3_BASE_SHA256 = "6668389cc323f3f913054c3573c9ce1b381a241eadb27ed5b1047e5ebe5eb1c1"
 DEFAULT_REPORT_DIR = PROJECT_ROOT / "reports"
+DEFAULT_RELEASE_CANDIDATE_FILENAME = "unified_gutenberg_arch_v0_3_release_candidate.pt"
 TEXT_SMOKE = "Gutenberg Arch v0.3 CPU release smoke test."
 VERIFY_PREFIX = "VERIFY_RESULT_JSON="
 
@@ -462,7 +463,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--models-dir", type=Path, default=DEFAULT_MODELS_DIR,
                         help="Folder for the release-candidate checkpoint (default: Models beside this script).")
     parser.add_argument("--output-checkpoint", type=Path, default=None,
-                        help="Optional explicit destination for the trained release candidate; existing files are never overwritten.")
+                        help=f"Optional explicit destination. Default: Models\\{DEFAULT_RELEASE_CANDIDATE_FILENAME}; existing files are never overwritten.")
     parser.add_argument("--report-dir", type=Path, default=DEFAULT_REPORT_DIR)
     parser.add_argument("--threads", type=int, default=2)
     parser.add_argument("--steps", type=int, default=2000)
@@ -538,9 +539,11 @@ def main() -> int:
     # exists even if validation stops early because the required base checkpoint is absent.
     models_dir.mkdir(parents=True, exist_ok=True)
     report_dir.mkdir(parents=True, exist_ok=True)
+    # The checkpoint has one stable, user-facing filename. Keep timestamps in
+    # the report filename only so each run has a separate audit record.
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_path = args.output_checkpoint.expanduser().resolve() if args.output_checkpoint else (
-        models_dir / f"unified_gutenberg_arch_v0_3_release_candidate_{timestamp}.pt"
+        models_dir / DEFAULT_RELEASE_CANDIDATE_FILENAME
     )
     report_path = report_dir / f"unified_gutenberg_v0_3_final_release_gate_{timestamp}.json"
     print(f"[MODEL DIR] {models_dir}", flush=True)
