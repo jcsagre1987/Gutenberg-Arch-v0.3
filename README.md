@@ -36,6 +36,12 @@ Models\
 reports\
 ```
 
+**Final checkpoint naming policy:** the final release-gate artifact defaults to
+`Models\\unified_gutenberg_arch_v0_3_release_candidate.pt`. Keep this checkpoint filename
+plain and stable: do not append a timestamp, run number, or version suffix. JSON reports
+retain timestamps under `reports\\` so each run has a separate audit record. The script
+refuses to overwrite an existing checkpoint at the default destination.
+
 ## Which command should I use to create a checkpoint?
 
 There are three different operations below. Choose the one matching your goal. A **base/initialized checkpoint** is not the same as a **trained release candidate**.
@@ -91,7 +97,7 @@ For that exact base, run:
 python test_unified_gutenberg_v0_3_final_release_gate.py
 ```
 
-The default run trains for 2,000 optimizer steps, then evaluates held-out AR/MQAR accuracy, full-vocabulary predictions, counterfactual mapping swaps, RAM use, checkpoint round-trip behavior, and fresh-process inference. The release-candidate checkpoint is saved only if the required gates pass; if fresh-process verification fails after it was written, the script removes the candidate. The base checkpoint is kept read-only. A JSON report is written under `reports`.
+The default run trains for 2,000 optimizer steps, then evaluates held-out AR/MQAR accuracy, full-vocabulary predictions, counterfactual mapping swaps, RAM use, checkpoint round-trip behavior, and fresh-process inference. If the required gates pass, the final checkpoint is saved by default as `Models\\unified_gutenberg_arch_v0_3_release_candidate.pt` (a stable filename with no timestamp or run-version suffix). If fresh-process verification fails after it was written, the script removes the candidate. The base checkpoint is kept read-only. A uniquely timestamped JSON report is written under `reports` so reports from separate runs remain distinct. The script refuses to overwrite an existing final checkpoint; move or rename the prior candidate before another default-named run, or pass `--output-checkpoint` for an explicitly chosen alternative destination.
 
 #### If you deliberately use a different v0.3 base checkpoint
 
@@ -119,7 +125,7 @@ The script prints `[MODEL DIR]`, `[BASE CHECKPOINT]`, `[OUTPUT CHECKPOINT DESTIN
 
 ## Checkpoint creation hierarchy: v0.2 base → v0.3 release candidate
 
-This is the recommended checkpoint lineage for reproducing the successful experimental run that produced `unified_gutenberg_arch_v0_3_release_candidate_20261025_035353.pt`.
+This is the recommended checkpoint lineage for producing the stable final artifact `unified_gutenberg_arch_v0_3_release_candidate.pt`. The checkpoint filename stays the same across runs; its SHA-256 identifies the actual file contents.
 
 ```text
 1. v0.2 initialized base
@@ -136,7 +142,7 @@ This is the recommended checkpoint lineage for reproducing the successful experi
            | and evaluates held-out, counterfactual, RAM, and reload checks
            v
 3. v0.3 experimental release candidate
-   Models\unified_gutenberg_arch_v0_3_release_candidate_<timestamp>.pt
+   Models\unified_gutenberg_arch_v0_3_release_candidate.pt
    (saved only after all required release gates pass)
 ```
 
@@ -159,10 +165,10 @@ The following values identify the successful run recorded on October 25, 2026. T
 | v0.2 initialized base | `91f17be338f3b359d90ba7bd46fd50cb0f9e166eec3210d58b33eb4d199694c5` |
 | v0.3 initialized base | `8d5614d27689ac529f4d21582fbfeac84b5e09634be169e424697b81042300db` |
 | Final v0.3 release candidate | `e7dcf14e495ad5afa1d51027ca76e547c9d0292a313705d40434f1c9c0b50640` |
-| Candidate filename | `unified_gutenberg_arch_v0_3_release_candidate_20261025_035353.pt` |
+| Final checkpoint filename | `unified_gutenberg_arch_v0_3_release_candidate.pt` |
 | Release-gate status | `PASS_EXPERIMENTAL_OPEN_WEIGHT_RELEASE_CANDIDATE` |
 
-The candidate was saved under `Models\` and its JSON report under `reports\`. Keep the candidate and its matching report together. Different initializations or runs may produce different hashes and timestamped filenames; always record the exact values printed by the run you are using.
+The candidate is saved under `Models\` and each JSON report is saved under `reports\`. The checkpoint uses the stable filename `unified_gutenberg_arch_v0_3_release_candidate.pt`; report filenames retain timestamps to distinguish runs. Different initializations or runs can produce different checkpoint hashes even though the filename stays the same. Keep the checkpoint SHA-256 and its corresponding report together, and note that the script refuses to overwrite an existing default-named checkpoint.
 
 ## Checkpoint workflow at a glance
 
